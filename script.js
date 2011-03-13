@@ -1,7 +1,5 @@
 var canvas;
 var ctx;
-var canvasWidth;
-var canvasHeight;
 var x;
 var y;
 var speedX;
@@ -13,9 +11,23 @@ var frameCount;
 var fpsTimer;
 var SPEED = 30;
 var BOX_WIDTH = 32;
+
+//Key management
+var keyCodes = new Array();
+keyCodes['X']       = 32
+keyCodes['left']    = 37;
+keyCodes['up']      = 38;
+keyCodes['right']   = 39;
+keyCodes['down']    = 40;
+keyCodes['C']       = 67;
+keyCodes['V']       = 86;
+keyCodes['x']       = 88;
+keyCodes['c']       = 99;
+keyCodes['v']       = 118;
+keyCodes['space']   = 120;
+
 var key;
 var keyAsync;
-
 var keys;
 var keysAsync;
 var JOY_UP      = 1 << 0;
@@ -37,6 +49,8 @@ var cameraRight;
 // Nemo.
 var nemo;
 
+var control;
+
 // Gravity definition.
 var GRAVITY = +200;
 
@@ -44,84 +58,15 @@ var GRAVITY = +200;
 function init(){
     canvas = document.getElementById('canvas');
     
-    document.onkeydown = function(e){
-        onKeyDown(e);
-    };
-    
-    document.onkeyup = function(e){
-        onKeyUp(e);
-    };
-    
-    canvasWidth = canvas.width;
-    canvasHeight = canvas.height;
     if(canvas.getContext){
         ctx = canvas.getContext('2d');
-        
+        initGame();
     }
-    
-    initGame();
-    
-    
 }
 
 function updateKeys(){
     keys = keysAsync;
     //keysAsync = 0;
-}
-
-function onKeyDown( event )
-{
-    switch( event.keyCode )
-    {
-        case 120:
-        case 88:
-        case 32:
-            keysAsync |= JOY_BTN_A;
-            break;
-        
-        case 99:
-        case 67:
-            keysAsync |= JOY_BTN_B;
-            break;
-            
-        case 118:
-        case 86:
-            keysAsync |= JOY_BTN_C;
-            break;
-        
-        case 37:keysAsync |= JOY_LEFT;break;
-        case 38:keysAsync |= JOY_UP;break;
-        case 39:keysAsync |= JOY_RIGHT;break;
-        case 40:keysAsync |= JOY_DOWN;break;
-    }
-}
-
-
-function onKeyUp( event )
-{
-    switch( event.keyCode )
-    {
-        case 120:
-        case 88:
-        case 32:
-            keysAsync &= ~JOY_BTN_A;
-            break;
-        
-        case 99:
-        case 67:
-            keysAsync &= ~JOY_BTN_B;
-            break;
-            
-        case 118:
-        case 86:
-            keysAsync &= ~JOY_BTN_C;
-            break;
-            
-        case 37:keysAsync &= ~JOY_LEFT;break;
-        case 38:keysAsync &= ~JOY_UP;break;
-        case 39:keysAsync &= ~JOY_RIGHT;break;
-        case 40:keysAsync &= ~JOY_DOWN;break;
-    }
 }
 
 function initCamera()
@@ -145,15 +90,15 @@ function updateCamera()
         cameraY = cameraY + ( nemo.posY - cameraY ) / 16;
     }
     
-    cameraLeft      = cameraX - canvasWidth / 2;
-    cameraRight     = cameraX + canvasWidth / 2;
-    cameraTop       = cameraY - 2 * canvasHeight / 3;
-    cameraBottom    = cameraY + 1 * canvasHeight / 3;
+    cameraLeft      = cameraX - canvas.width / 2;
+    cameraRight     = cameraX + canvas.width / 2;
+    cameraTop       = cameraY - 2 * canvas.height / 3;
+    cameraBottom    = cameraY + 1 * canvas.height / 3;
 }
 
 function initGame(){
     x = BOX_WIDTH / 2;
-    y = canvasHeight - BOX_WIDTH / 2;
+    y = canvas.height - BOX_WIDTH / 2;
     speedX = SPEED;
     speedY = SPEED;
     totalTimer = 0;
@@ -163,6 +108,7 @@ function initGame(){
     
     initCamera();
     nemo = new Actor();
+    control = new Control();
     
     setInterval(gameLoop, FRAME_DURATION);
 }
@@ -228,14 +174,14 @@ function updateGame(){
     
     
     
-    if(x > ( canvasWidth - BOX_WIDTH / 2 ) ){
-        x = canvasWidth - BOX_WIDTH / 2 ;
+    if(x > ( canvas.width - BOX_WIDTH / 2 ) ){
+        x = canvas.width - BOX_WIDTH / 2 ;
     }
     if(x < BOX_WIDTH / 2 ){
         x = BOX_WIDTH / 2;
     }
-    if(y > ( canvasHeight - BOX_WIDTH / 2) ){
-        y = ( canvasHeight - BOX_WIDTH / 2);
+    if(y > ( canvas.height - BOX_WIDTH / 2) ){
+        y = ( canvas.height - BOX_WIDTH / 2);
     }
     if(y < BOX_WIDTH / 2) {
         y = BOX_WIDTH / 2;
@@ -245,7 +191,7 @@ function updateGame(){
 }
 
 function drawGame(){
-    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     
     ctx.fillStyle = "#000";
     ctx.fillText( "fps=" + fps, 20 , 20 );
@@ -287,7 +233,7 @@ function drawBackground() {
     
     // Ground.
     ctx.fillStyle = "rgb(0,150,0)";
-    ctx.fillRect( 0 , -cameraTop , canvasWidth , canvasHeight );
+    ctx.fillRect( 0 , -cameraTop , canvas.width , canvas.height );
     
     // Flowers.
     ctx.fillStyle = "rgb(255,0,0)";
@@ -375,7 +321,7 @@ function Actor(){
             }
         }
         else
-        {
+        {40
             if ( ( keys & JOY_LEFT     ) != 0 )    this.accelX = -100;
             if ( ( keys & JOY_RIGHT    ) != 0 )    this.accelX = +100;
             
@@ -449,4 +395,76 @@ function Actor(){
                         screenY - this.NEMO_HEIGHT,
                         this.NEMO_WIDTH , this.NEMO_HEIGHT );
     }
+}
+
+//Class managing the keys control
+function Control(){
+    //Control must start to listen to keyboard
+    var insideControl = this;
+    document.onkeydown = function(e){
+        insideControl.onKeyDown(e);
+    };
+    
+    document.onkeyup = function(e){
+        insideControl.onKeyUp(e);
+    };
+    
+    this.onKeyDown = function( event )
+    {
+        switch( event.keyCode )
+        {
+            case keyCodes['space']:
+            case keyCodes['x']:
+            case keyCodes['X']:
+                keysAsync |= JOY_BTN_A;
+                break;
+
+            case keyCodes['c']:
+            case keyCodes['C']:
+                keysAsync |= JOY_BTN_B;
+                break;
+
+            case keyCodes['v']:
+            case keyCodes['V']:
+                keysAsync |= JOY_BTN_C;
+                break;
+
+            case keyCodes['left']:keysAsync |= JOY_LEFT;break;
+            case keyCodes['up']:keysAsync |= JOY_UP;break;
+            case keyCodes['right']:keysAsync |= JOY_RIGHT;break;
+            case keyCodes['down']:keysAsync |= JOY_DOWN;break;
+        }
+    }
+
+
+    this.onKeyUp = function( event )
+    {
+        switch( event.keyCode )
+        {
+            case keyCodes['space']:
+            case keyCodes['x']:
+            case keyCodes['X']:
+                keysAsync &= ~JOY_BTN_A;
+                break;
+
+            case keyCodes['c']:
+            case keyCodes['C']:
+                keysAsync &= ~JOY_BTN_B;
+                break;
+
+            case keyCodes['v']:
+            case keyCodes['V']:
+                keysAsync &= ~JOY_BTN_C;
+                break;
+
+            case keyCodes['left']:keysAsync &= ~JOY_LEFT;break;
+            case keyCodes['up']:keysAsync &= ~JOY_UP;break;
+            case keyCodes['right']:keysAsync &= ~JOY_RIGHT;break;
+            case keyCodes['down']:keysAsync &= ~JOY_DOWN;break;
+        }
+    }
+}
+//Launching game when document is loaded
+document.body.onload = function(){
+    init();
 }
