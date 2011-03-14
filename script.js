@@ -1,16 +1,10 @@
 var canvas;
 var ctx;
-var x;
-var y;
-var speedX;
-var speedY;
 var FRAME_DURATION = 18;
 var totalTimer;
 var fps;
 var frameCount;
 var fpsTimer;
-var SPEED = 30;
-var BOX_WIDTH = 32;
 
 //Key management
 var key;
@@ -40,7 +34,7 @@ var control;
 var obstacle;
 
 // Gravity definition.
-var GRAVITY = +200;
+var GRAVITY = 550;
 
 
 function init(){
@@ -66,11 +60,6 @@ function initCamera()
 
 function updateCamera()
 {
-    //if ( ( keys & JOY_LEFT     ) != 0 )    cameraX -= 1;
-    //if ( ( keys & JOY_RIGHT    ) != 0 )    cameraX += 1;
-    //if ( ( keys & JOY_UP       ) != 0 )    cameraY -= 1;
-    //if ( ( keys & JOY_DOWN     ) != 0 )    cameraY += 1;
-    
     // Nemo tracking.
     if ( nemo )
     {
@@ -85,10 +74,6 @@ function updateCamera()
 }
 
 function initGame(){
-    x = BOX_WIDTH / 2;
-    y = canvas.height - BOX_WIDTH / 2;
-    speedX = SPEED;
-    speedY = SPEED;
     totalTimer = 0;
     fps = 0;
     frameCount = 0;
@@ -114,15 +99,12 @@ function updateFps(){
 }
 
 function gameLoop(){
-    //
     updateFps();
     updateKeys();
     updateGame();
     drawGame();
-    //
     
     totalTimer += FRAME_DURATION;
-        
     
 }
 
@@ -146,11 +128,11 @@ function drawGame(){
     ctx.fillStyle = "#000";
     ctx.fillText( "fps=" + fps, 20 , 20 );
     
-    //ctx.fillStyle = "#000";
-    //ctx.fillText( "accelY=" + nemo.accelY, 20 , 40 );
+    //Debug
     ctx.fillStyle = "#000";
     ctx.fillText( "accelY=" + nemo.accelY, 20 , 40 );
-    ctx.fillText( "velY=" + nemo.velY, 20 , 60 );
+    ctx.fillText( "velY=" + nemo.velY, 20 , 50 );
+    ctx.fillText( "Y=" + nemo.posY, 20 , 60 );
 
     // Draw background.
     drawBackground();
@@ -171,7 +153,6 @@ function clamp( value , min , max )
 }
 
 function drawBackground() {
-    
     
     // Clouds.
     ctx.fillStyle = "rgb(150,190,255)";
@@ -199,12 +180,6 @@ function drawBackground() {
         ctx.fillRect( fx - cameraLeft , ( fy % 100 ) - cameraTop , 10 , 10 );
     }
     
-  
-    
-    
-    
-    
-    
 }
 
 function Actor(){
@@ -222,13 +197,8 @@ function Actor(){
     this.jumpImpulseFinished = true;
     
     
-    this.NEMO_WIDTH     = 32;
-    this.NEMO_HEIGHT    = 46;
-    
-    // 20 pixel per second.
-    this.NEMO_SPEED_X   = 150;
-    
-    this.ACCEL_JUMP = 200;
+    this.width     = 32;
+    this.height    = 46;
     
     // Maximum acceleration.
     this.MAX_ACCEL = 300;
@@ -297,19 +267,7 @@ function Actor(){
     }
     
     this.updatePhysics = function() {
-        if ( this.onGround )
-        {
-            
-        }
-        else
-        {
-            
-        }
-        
-        // Acceleration clamping.
-        //this.accelX = clamp( this.accelX , -this.MAX_ACCEL , +this.MAX_ACCEL );
-        //this.accelY = clamp( this.accelY , -this.MAX_ACCEL ,
-        //   this.onGround ? 0 : +this.MAX_ACCEL );
+        this.accelY = GRAVITY
         
         // Accel => Speed.
         this.velX += this.accelX * FRAME_DURATION / 1000;
@@ -318,9 +276,6 @@ function Actor(){
         // Speed clamping.
         this.velX = clamp( this.velX , -this.MAX_SPEED , +this.MAX_SPEED );
         //this.velY = clamp( this.velY , -this.MAX_SPEED , +this.MAX_SPEED );
-        
-        // Gravity.
-        this.velY += 550 * FRAME_DURATION / 1000;
     
         // Speed => Positions.
         this.posX += this.velX * FRAME_DURATION / 1000;
@@ -343,37 +298,37 @@ function Actor(){
         var screenY = this.posY - cameraTop;
         
         ctx.fillStyle = this.color;
-        ctx.fillRect(   screenX - this.NEMO_WIDTH / 2 ,
-                        screenY - this.NEMO_HEIGHT,
-                        this.NEMO_WIDTH , this.NEMO_HEIGHT );
+        ctx.fillRect(   screenX - this.width / 2 ,
+                        screenY - this.height,
+                        this.width , this.height );
     }
     
     this.adjust = function(obs){
-        var nemoLeft    = this.posX - this.NEMO_WIDTH / 2;
-        var nemoRight   = this.posX + this.NEMO_WIDTH / 2;
-        var nemoTop     = this.posY - this.NEMO_HEIGHT;
-        var nemoBottom  = this.posY;
+        var actorLeft    = this.posX - this.width / 2;
+        var actorRight   = this.posX + this.width / 2;
+        var actorTop     = this.posY - this.height;
+        var actorBottom  = this.posY;
         
         var obsLeft     = obs.x - obs.width / 2;
         var obsRight    = obs.x + obs.width / 2;
         var obsTop      = obs.y - obs.height;
         var obsBottom   = obs.y;
         
-        var notOverlap  = nemoRight     < obsLeft
-                      ||  nemoLeft      > obsRight
-                      ||  nemoTop       > obsBottom
-                      ||  nemoBottom    < obsTop;
+        var notOverlap  = actorRight     < obsLeft
+                      ||  actorLeft      > obsRight
+                      ||  actorTop       > obsBottom
+                      ||  actorBottom    < obsTop;
               
        if(!notOverlap){
-           var overlapTop = Math.max(0, nemoBottom - obsTop);
-           var overlapLeft = Math.max(0, nemoRight - obsLeft);;
-           var overlapRight = Math.max(0, obsRight - nemoLeft);
-           var overlapBottom = Math.max(0, obsBottom - nemoTop);
+           var overlapTop = Math.max(0, actorBottom - obsTop);
+           var overlapLeft = Math.max(0, actorRight - obsLeft);;
+           var overlapRight = Math.max(0, obsRight - actorLeft);
+           var overlapBottom = Math.max(0, obsBottom - actorTop);
            
+           //Actor must be put back on top
            if(
-            nemoBottom > obsTop 
-            && nemoBottom < obsBottom 
-            && nemo.velY > 0
+            overlapTop > 0
+            && this.velY > 0
             && overlapTop < overlapLeft
             && overlapTop < overlapRight
            ){
@@ -381,20 +336,45 @@ function Actor(){
                this.accelY = 0;
                this.velY = 0;
                this.onGround = true;
-               return true;
            }
            
-           if(nemoRight > obsLeft && nemoRight < obsRight){
-               this.posX += (obsLeft - nemoRight);
+           //Actor must be put back on bottom
+           if(
+            overlapBottom > 0
+            && this.velY < 0
+            && overlapBottom < overlapLeft
+            && overlapBottom < overlapRight
+           ){
+               this.posY += overlapBottom;
+               this.accelY = GRAVITY;
+               this.velY = 0;
+               this.jumpImpulseFinished = true;
+           }
+           
+           //Actor must be put back on left
+           if(
+            overlapLeft > 0
+            && this.velX > 0
+            && overlapLeft < overlapTop
+            && overlapLeft < overlapBottom
+           ){
+               this.posX -= overlapLeft;
                this.accelX = 0;
                this.velX = 0;
            }
            
-           if(nemoLeft < obsRight && nemoLeft > obsLeft){
-               this.posX += (obsRight - nemoLeft);
+           //Actor must be put back on right
+           if(
+            overlapRight > 0
+            && this.velX < 0
+            && overlapRight < overlapTop
+            && overlapRight < overlapBottom
+           ){
+               this.posX += (obsRight - actorLeft);
                this.accelX = 0;
                this.velX = 0;
            }
+           
        }
     }
 }
@@ -483,9 +463,9 @@ function Control(){
 
 function Obstacle(){
     this.x = 100;
-    this.y = 0;
-    this.height = 100;
-    this.width = 100;
+    this.y = -100;
+    this.height = 20;
+    this.width = 1000;
     
     this.draw = function(){
         ctx.fillStyle = "rgb(0,230,0)";
