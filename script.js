@@ -6,19 +6,6 @@ var fps;
 var frameCount;
 var fpsTimer;
 
-//Key management
-var key;
-var keyAsync;
-var keys;
-var keysAsync;
-var JOY_UP      = 1 << 0;
-var JOY_DOWN    = 1 << 1;
-var JOY_LEFT    = 1 << 2;
-var JOY_RIGHT   = 1 << 3;
-var JOY_BTN_A   = 1 << 4;
-var JOY_BTN_B   = 1 << 5;
-var JOY_BTN_C   = 1 << 6;
-
 // Camera values.
 var cameraX;
 var cameraY;
@@ -31,7 +18,7 @@ var cameraRight;
 var nemo;
 
 var control;
-var obstacle;
+var obstacles;
 
 // Gravity definition.
 var GRAVITY = 550;
@@ -46,11 +33,6 @@ function init(){
     }
 }
 
-function updateKeys(){
-    keys = keysAsync;
-    //keysAsync = 0;
-}
-
 function initCamera()
 {
     cameraX = 0;
@@ -63,8 +45,8 @@ function updateCamera()
     // Nemo tracking.
     if ( nemo )
     {
-        cameraX = cameraX + ( nemo.posX - cameraX ) / 16;
-        cameraY = cameraY + ( nemo.posY - cameraY ) / 16;
+        cameraX = cameraX + ( nemo.x - cameraX ) / 16;
+        cameraY = cameraY + ( nemo.y - cameraY ) / 16;
     }
     
     cameraLeft      = cameraX - canvas.width / 2;
@@ -82,7 +64,12 @@ function initGame(){
     initCamera();
     nemo = new Actor();
     control = new Control();
-    obstacle = new Obstacle();
+    
+    //Creating new obstacles
+    obstacles = new Array();
+    for(var i=0; i<100; i++){
+        obstacles.push(new Obstacle(i*160 + 100, (i%3) * 20 -70, 10, 100));
+    }
     
     setInterval(gameLoop, FRAME_DURATION);
 }
@@ -100,7 +87,7 @@ function updateFps(){
 
 function gameLoop(){
     updateFps();
-    updateKeys();
+    control.updateKeys();
     updateGame();
     drawGame();
     
@@ -119,7 +106,10 @@ function updateGame(){
 
 function updateCollision(){
     //Check nemo vs obstacles
-    nemo.adjust(obstacle);
+    for(var i=0; i < obstacles.length; i ++){
+        nemo.adjust(obstacles[i]);
+    }
+    
 }
 
 function drawGame(){
@@ -132,13 +122,15 @@ function drawGame(){
     ctx.fillStyle = "#000";
     ctx.fillText( "accelY=" + nemo.accelY, 20 , 40 );
     ctx.fillText( "velY=" + nemo.velY, 20 , 50 );
-    ctx.fillText( "Y=" + nemo.posY, 20 , 60 );
+    ctx.fillText( "Y=" + nemo.y, 20 , 60 );
 
     // Draw background.
     drawBackground();
     
     //Draw obstaces
-    obstacle.draw();
+    for(var i=0; i < obstacles.length; i ++){
+        obstacles[i].draw();
+    }
     
     // Draw Nemo.
     nemo.draw();
@@ -183,8 +175,8 @@ function drawBackground() {
 }
 
 function Actor(){
-    this.posX = 0;
-    this.posY = 0;
+    this.x = 0;
+    this.y = 0;
     this.velX = 0;
     this.velY = 0;
     this.accelX = 0;
@@ -217,10 +209,10 @@ function Actor(){
     this.updateKeys = function() {
         if ( this.onGround )
         {
-            if ( ( keys & JOY_LEFT     ) != 0 )    this.accelX = -400;
-            if ( ( keys & JOY_RIGHT    ) != 0 )    this.accelX = +400;
+            if ( ( control.keys & control.JOY_LEFT     ) != 0 )    this.accelX = -400;
+            if ( ( control.keys & control.JOY_RIGHT    ) != 0 )    this.accelX = +400;
             
-            if ( ( keys & ( JOY_LEFT + JOY_RIGHT) ) == 0 )
+            if ( ( control.keys & ( control.JOY_LEFT + control.JOY_RIGHT) ) == 0 )
             {
                this.accelX = 0;
                
@@ -236,9 +228,9 @@ function Actor(){
             }
             
             // Jump.
-            if ( ( keys & JOY_UP ) != 0 )
+            if ( ( control.keys & control.JOY_UP ) != 0 )
             {
-                this.startJumpY = this.posY;
+                this.startJumpY = this.y;
                 this.onGround   = false;
                 this.velY       = -200;
                 this.jumpImpulseFinished = false;
@@ -246,19 +238,19 @@ function Actor(){
         }
         else
         {
-            if ( ( keys & JOY_LEFT     ) != 0 )    this.accelX = -100;
-            if ( ( keys & JOY_RIGHT    ) != 0 )    this.accelX = +100;
+            if ( ( control.keys & control.JOY_LEFT     ) != 0 )    this.accelX = -100;
+            if ( ( control.keys & control.JOY_RIGHT    ) != 0 )    this.accelX = +100;
             
             // Continue jump.
-            var deltaY = this.startJumpY - this.posY;
+            var deltaY = this.startJumpY - this.y;
             
             if (          deltaY > 100
-                    ||  ( keys & JOY_UP ) == 0 )
+                    ||  ( control.keys & control.JOY_UP ) == 0 )
             {
                 this.jumpImpulseFinished = true;
             }
             
-            if ( (      keys & JOY_UP ) != 0 
+            if ( (      control.keys & control.JOY_UP ) != 0 
                     && !this.jumpImpulseFinished )
             {
                 this.velY       = -200;
@@ -275,16 +267,15 @@ function Actor(){
         
         // Speed clamping.
         this.velX = clamp( this.velX , -this.MAX_SPEED , +this.MAX_SPEED );
-        //this.velY = clamp( this.velY , -this.MAX_SPEED , +this.MAX_SPEED );
     
         // Speed => Positions.
-        this.posX += this.velX * FRAME_DURATION / 1000;
-        this.posY += this.velY * FRAME_DURATION / 1000;
+        this.x += this.velX * FRAME_DURATION / 1000;
+        this.y += this.velY * FRAME_DURATION / 1000;
         
         // Position clamping.
-        if ( this.posY >= 0 )
+        if ( this.y >= 0 )
         {
-            this.posY = 0;
+            this.y = 0;
             this.velY = 0;
             this.accelY = 0;
             this.onGround = true;
@@ -294,8 +285,8 @@ function Actor(){
     
     
     this.draw = function(){
-        var screenX = this.posX - cameraLeft;
-        var screenY = this.posY - cameraTop;
+        var screenX = this.x - cameraLeft;
+        var screenY = this.y - cameraTop;
         
         ctx.fillStyle = this.color;
         ctx.fillRect(   screenX - this.width / 2 ,
@@ -304,10 +295,10 @@ function Actor(){
     }
     
     this.adjust = function(obs){
-        var actorLeft    = this.posX - this.width / 2;
-        var actorRight   = this.posX + this.width / 2;
-        var actorTop     = this.posY - this.height;
-        var actorBottom  = this.posY;
+        var actorLeft    = this.x - this.width / 2;
+        var actorRight   = this.x + this.width / 2;
+        var actorTop     = this.y - this.height;
+        var actorBottom  = this.y;
         
         var obsLeft     = obs.x - obs.width / 2;
         var obsRight    = obs.x + obs.width / 2;
@@ -332,7 +323,7 @@ function Actor(){
             && overlapTop < overlapLeft
             && overlapTop < overlapRight
            ){
-               this.posY = obsTop;
+               this.y = obsTop;
                this.accelY = 0;
                this.velY = 0;
                this.onGround = true;
@@ -345,7 +336,7 @@ function Actor(){
             && overlapBottom < overlapLeft
             && overlapBottom < overlapRight
            ){
-               this.posY += overlapBottom;
+               this.y += overlapBottom;
                this.accelY = GRAVITY;
                this.velY = 0;
                this.jumpImpulseFinished = true;
@@ -358,7 +349,7 @@ function Actor(){
             && overlapLeft < overlapTop
             && overlapLeft < overlapBottom
            ){
-               this.posX -= overlapLeft;
+               this.x -= overlapLeft;
                this.accelX = 0;
                this.velX = 0;
            }
@@ -370,7 +361,7 @@ function Actor(){
             && overlapRight < overlapTop
             && overlapRight < overlapBottom
            ){
-               this.posX += (obsRight - actorLeft);
+               this.x += (obsRight - actorLeft);
                this.accelX = 0;
                this.velX = 0;
            }
@@ -393,6 +384,18 @@ function Control(){
     this.keyCodes['c']       = 99;
     this.keyCodes['v']       = 118;
     this.keyCodes['space']   = 120;
+    
+    //Key management
+    this.keys = 0;
+    this.keysAsync = 0;
+    this.JOY_UP      = 1 << 0;
+    this.JOY_DOWN    = 1 << 1;
+    this.JOY_LEFT    = 1 << 2;
+    this.JOY_RIGHT   = 1 << 3;
+    this.JOY_BTN_A   = 1 << 4;
+    this.JOY_BTN_B   = 1 << 5;
+    this.JOY_BTN_C   = 1 << 6;
+
 
     
     //Control must start to listen to keyboard
@@ -412,23 +415,23 @@ function Control(){
             case this.keyCodes['space']:
             case this.keyCodes['x']:
             case this.keyCodes['X']:
-                keysAsync |= JOY_BTN_A;
+                this.keysAsync |= this.JOY_BTN_A;
                 break;
 
             case this.keyCodes['c']:
             case this.keyCodes['C']:
-                keysAsync |= JOY_BTN_B;
+                this.keysAsync |= this.JOY_BTN_B;
                 break;
 
             case this.keyCodes['v']:
             case this.keyCodes['V']:
-                keysAsync |= JOY_BTN_C;
+                this.keysAsync |= this.JOY_BTN_C;
                 break;
 
-            case this.keyCodes['left']:keysAsync |= JOY_LEFT;break;
-            case this.keyCodes['up']:keysAsync |= JOY_UP;break;
-            case this.keyCodes['right']:keysAsync |= JOY_RIGHT;break;
-            case this.keyCodes['down']:keysAsync |= JOY_DOWN;break;
+            case this.keyCodes['left']:this.keysAsync |= this.JOY_LEFT;break;
+            case this.keyCodes['up']:this.keysAsync |= this.JOY_UP;break;
+            case this.keyCodes['right']:this.keysAsync |= this.JOY_RIGHT;break;
+            case this.keyCodes['down']:this.keysAsync |= this.JOY_DOWN;break;
         }
     }
 
@@ -440,32 +443,37 @@ function Control(){
             case this.keyCodes['space']:
             case this.keyCodes['x']:
             case this.keyCodes['X']:
-                keysAsync &= ~JOY_BTN_A;
+                this.keysAsync &= ~this.JOY_BTN_A;
                 break;
 
             case this.keyCodes['c']:
             case this.keyCodes['C']:
-                keysAsync &= ~JOY_BTN_B;
+                this.keysAsync &= ~this.JOY_BTN_B;
                 break;
 
             case this.keyCodes['v']:
             case this.keyCodes['V']:
-                keysAsync &= ~JOY_BTN_C;
+                this.keysAsync &= ~this.JOY_BTN_C;
                 break;
 
-            case this.keyCodes['left']:keysAsync &= ~JOY_LEFT;break;
-            case this.keyCodes['up']:keysAsync &= ~JOY_UP;break;
-            case this.keyCodes['right']:keysAsync &= ~JOY_RIGHT;break;
-            case this.keyCodes['down']:keysAsync &= ~JOY_DOWN;break;
+            case this.keyCodes['left']:this.keysAsync &= ~this.JOY_LEFT;break;
+            case this.keyCodes['up']:this.keysAsync &= ~this.JOY_UP;break;
+            case this.keyCodes['right']:this.keysAsync &= ~this.JOY_RIGHT;break;
+            case this.keyCodes['down']:this.keysAsync &= ~this.JOY_DOWN;break;
         }
+    }
+    
+    this.updateKeys = function(){
+        this.keys = this.keysAsync;
+
     }
 }
 
-function Obstacle(){
-    this.x = 100;
-    this.y = -100;
-    this.height = 20;
-    this.width = 1000;
+function Obstacle(x, y, height, width){
+    this.x = x;
+    this.y = y;
+    this.height = height;
+    this.width = width;
     
     this.draw = function(){
         ctx.fillStyle = "rgb(0,230,0)";
