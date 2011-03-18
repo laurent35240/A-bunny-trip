@@ -19,7 +19,17 @@ function Actor(x, y, width, height){
     // Maximum speed.
     this.MAX_SPEED = 400;
     
+    this.life = 100;
+    
+    // Attacks parameter
+    this.stumpAttack = 100;
+    this.hmpfAttack = false;
+    this.hmpfAttackDistance = 20;
+    
     this.update = function(){
+        //Reseting the hmpf attack
+        this.hmpfAttack = false;
+        
         // Check inputs.
         this.updateKeys();
                 
@@ -77,31 +87,11 @@ function Actor(x, y, width, height){
                 this.velY       = -200;
             }
         }
-    }
-    
-    this.updatePhysics = function() {
-        this.accelY = GRAVITY
         
-        // Accel => Speed.
-        this.velX += this.accelX * FRAME_DURATION / 1000;
-        this.velY += this.accelY * FRAME_DURATION / 1000;
-        
-        // Speed clamping.
-        this.velX = clamp( this.velX , -this.MAX_SPEED , +this.MAX_SPEED );
-    
-        // Speed => Positions.
-        this.x += this.velX * FRAME_DURATION / 1000;
-        this.y += this.velY * FRAME_DURATION / 1000;
-        
-        // Position clamping.
-        if ( this.y >= 0 )
-        {
-            this.y = 0;
-            this.velY = 0;
-            this.accelY = 0;
-            this.onGround = true;
+        //Attacks keys
+        if ( ( control.keys & control.JOY_BTN_B     ) != 0 ){
+            this.hmpfAttack = true;
         }
-        
     }
     
     /**
@@ -213,7 +203,9 @@ function Actor(x, y, width, height){
        ){
            this.y = ennemy.y - ennemy.height;
            this.accelY = 0;
-           this.velY = -this.velY;
+           this.velY = -this.velY + 2*ennemy.velY;
+           
+           ennemy.life -= this.stumpAttack;
        }
 
        //Actor must be put back on bottom
@@ -224,8 +216,10 @@ function Actor(x, y, width, height){
        ){
            this.y += overlap['bottom'];
            this.accelY = GRAVITY;
-           this.velY = -this.velY;
+           this.velY = -this.velY + 2*ennemy.velY;
            this.jumpImpulseFinished = true;
+           
+           this.life -= ennemy.attack;
        }
 
        //Actor must be put back on left
@@ -236,7 +230,9 @@ function Actor(x, y, width, height){
        ){
            this.x -= overlap['left'];
            this.accelX = 0;
-           this.velX = -this.velX;
+           this.velX = -this.velX + 2*ennemy.velX;
+           
+           this.life -= ennemy.attack;
        }
 
        //Actor must be put back on right
@@ -247,11 +243,23 @@ function Actor(x, y, width, height){
        ){
            this.x += overlap['right'];
            this.accelX = 0;
-           this.velX = -this.velX;
+           this.velX = -this.velX + 2*ennemy.velX;
+           
+           this.life -= ennemy.attack;
+       }
+       
+       //hmpf attack
+       if(this.hmpfAttack 
+           && Math.max(this.x - ennemy.x, ennemy.x - this.x) < (this.width / 2 + this.hmpfAttackDistance + ennemy.width / 2)){
+           var ennemyEscapeForward = true;
+           if(this.x > ennemy.x){
+               ennemyEscapeForward = false;
+           }
+           ennemy.escape(ennemyEscapeForward);
        }
     }
 }
 
-Actor.inheritsFrom(MovingObject);
+Actor.inheritsFrom(LivingObject);
 
 

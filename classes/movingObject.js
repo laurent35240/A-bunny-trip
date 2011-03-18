@@ -13,6 +13,7 @@ function MovingObject(x, y, width, height){
     this.color = "rgb(200,200,0)";
     this.width  = width;
     this.height = height;
+    this.canGoThroughFloor = false;
     
     
     this.draw = function(){
@@ -23,5 +24,33 @@ function MovingObject(x, y, width, height){
         ctx.fillRect(   screenX - this.width / 2 ,
                         screenY - this.height,
                         this.width , this.height );
+    }
+    
+    /**
+     * Updating acceleration, velocity and position
+     */
+    this.updatePhysics = function() {
+        this.accelY = GRAVITY
+        
+        // Accel => Speed.
+        this.velX += this.accelX * FRAME_DURATION / 1000;
+        this.velY += this.accelY * FRAME_DURATION / 1000;
+        
+        // Speed clamping.
+        this.velX = clamp( this.velX , -this.MAX_SPEED , +this.MAX_SPEED );
+    
+        // Speed => Positions.
+        this.x += this.velX * FRAME_DURATION / 1000;
+        this.y += this.velY * FRAME_DURATION / 1000;
+        
+        // Position clamping.
+        if ( this.y >= 0 && !this.canGoThroughFloor)
+        {
+            this.y = 0;
+            this.velY = 0;
+            this.accelY = 0;
+            this.onGround = true;
+        }
+        
     }
 }

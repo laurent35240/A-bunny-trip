@@ -106,6 +106,7 @@ function updateGame(){
     
     updateCamera();
     nemo.update();
+    ennemy.update();
     
     updateCollision();
     
@@ -132,6 +133,7 @@ function drawGame(){
     ctx.fillText( "accelY=" + nemo.accelY, 20 , 40 );
     ctx.fillText( "velY=" + nemo.velY, 20 , 50 );
     ctx.fillText( "Y=" + nemo.y, 20 , 60 );
+    ctx.fillText( "life=" + nemo.life, 20 , 70 );
 
     // Draw background.
     drawBackground();
