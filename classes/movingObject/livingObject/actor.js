@@ -25,10 +25,22 @@ function Actor(x, y, width, height){
     this.stumpAttack = 100;
     this.hmpfAttack = false;
     this.hmpfAttackDistance = 20;
+    this.scratchAttack = false;
+    this.scratchAttackPoint = 50;
+    this.scratchAttackDistance = 20;
+    
+    //gfx part
+    var imgLoaded = false;
+    this.img = new Image();
+    this.img.src = 'img/bunny.jpg';
+    this.img.onload = function(){
+        imgLoaded = true;
+    }
     
     this.update = function(){
-        //Reseting the hmpf attack
+        //Reseting the attacks
         this.hmpfAttack = false;
+        this.scratchAttack = false;
         
         // Check inputs.
         this.updateKeys();
@@ -91,6 +103,11 @@ function Actor(x, y, width, height){
         //Attacks keys
         if ( ( control.keys & control.JOY_BTN_B     ) != 0 ){
             this.hmpfAttack = true;
+        }
+        
+        //Attacks keys
+        if ( ( control.keys & control.JOY_BTN_A     ) != 0 ){
+            this.scratchAttack = true;
         }
     }
     
@@ -248,15 +265,57 @@ function Actor(x, y, width, height){
            this.life -= ennemy.attack;
        }
        
+       //Attacks behavoiurs
+       var ennemyEscapeForward = true;
+       var ennemyIsForward = (ennemy.x > this.x);
        //hmpf attack
        if(this.hmpfAttack 
-           && Math.max(this.x - ennemy.x, ennemy.x - this.x) < (this.width / 2 + this.hmpfAttackDistance + ennemy.width / 2)){
-           var ennemyEscapeForward = true;
+           && Math.max(this.x - ennemy.x, ennemy.x - this.x) < (this.width / 2 + this.hmpfAttackDistance + ennemy.width / 2)
+           && ennemyIsForward == this.goForward //Direction of attack must be the same than ennemy
+       ){
            if(this.x > ennemy.x){
                ennemyEscapeForward = false;
            }
            ennemy.escape(ennemyEscapeForward);
        }
+       
+       //scratch attack
+       if(this.scratchAttack
+            && Math.max(this.x - ennemy.x, ennemy.x - this.x) < (this.width / 2 + this.scratchAttackDistance + ennemy.width / 2)
+            && ennemyIsForward == this.goForward //Direction of attack must be the same than ennemy
+       ){
+            ennemy.life -= this.scratchAttackPoint;
+           
+           if(this.x > ennemy.x){
+               ennemyEscapeForward = false;
+           }
+           ennemy.escape(ennemyEscapeForward);
+       }
+    }
+    
+    this.draw = function(){
+        var screenX = this.x - cameraLeft;
+        var screenY = this.y - cameraTop;
+        
+        this.parent.draw.call(this);
+        if(imgLoaded){
+            ctx.save();
+            ctx.translate(
+                screenX,
+                screenY - this.height
+            );
+            if(!this.goForward){
+                ctx.scale(-1,1);
+            }
+            ctx.drawImage(
+                this.img, 
+                - this.width / 2 ,
+                0, 
+                this.width, 
+                this.height
+            );
+            ctx.restore();
+        }
     }
 }
 

@@ -14,6 +14,7 @@ function MovingObject(x, y, width, height){
     this.width  = width;
     this.height = height;
     this.canGoThroughFloor = false;
+    this.goForward = true; //We consider that by defaut everything go forward
     
     
     this.draw = function(){
@@ -50,6 +51,14 @@ function MovingObject(x, y, width, height){
             this.velY = 0;
             this.accelY = 0;
             this.onGround = true;
+        }
+        
+        //Going forward ?
+        if(this.velX > 0){
+            this.goForward = true;
+        }
+        else if(this.velX < 0){
+            this.goForward = false;
         }
         
     }

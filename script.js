@@ -22,7 +22,7 @@ var nemo;
 var control;
 var obstacles;
 
-var ennemy;
+var ennemies;
 
 // Gravity definition.
 var GRAVITY = 550;
@@ -66,7 +66,7 @@ function initGame(){
     fpsTimer = 0;
     
     initCamera();
-    nemo = new Actor(0,0,32,46);
+    nemo = new Actor(0,0,46,46);
     control = new Control();
     
     //Creating new obstacles
@@ -76,7 +76,10 @@ function initGame(){
     }
     
     //Creating ennemies
-    ennemy = new Ennemy(50,0,32,46);
+    ennemies = new Array();
+    for(var j=0; j<10; j++){
+        ennemies.push(new Ennemy(50 + 100*j, 0, 32, 46));
+    }
     
     setInterval(gameLoop, FRAME_DURATION);
 }
@@ -106,7 +109,10 @@ function updateGame(){
     
     updateCamera();
     nemo.update();
-    ennemy.update();
+    
+    for(var i=0; i<ennemies.length; i++){
+        ennemies[i].update();
+    }
     
     updateCollision();
     
@@ -118,7 +124,9 @@ function updateCollision(){
         nemo.adjust(obstacles[i]);
     }
     
-    nemo.adjustWithEnnemy(ennemy);
+    for(var j=0; j < ennemies.length; j ++){
+        nemo.adjustWithEnnemy(ennemies[j]);
+    }
     
 }
 
@@ -147,7 +155,9 @@ function drawGame(){
     nemo.draw();
     
     //Draw ennemies
-    ennemy.draw();
+    for(var j=0; j < ennemies.length; j++){
+        ennemies[j].draw();
+    }
 }
 
 function clamp( value , min , max )
