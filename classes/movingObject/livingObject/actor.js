@@ -29,13 +29,10 @@ function Actor(x, y, width, height){
     this.scratchAttackPoint = 50;
     this.scratchAttackDistance = 20;
     
-    //gfx part
-    var imgLoaded = false;
-    this.img = new Image();
-    this.img.src = 'img/bunny.jpg';
-    this.img.onload = function(){
-        imgLoaded = true;
-    }
+    //Animation initialisation
+    this.standingAnimation = new Animation('img/actor.png', ['frame1']);
+    this.runningAnimation = new Animation('img/actor.png', ['frame1', 'frame2', 'frame1', 'frame3']);
+    
     
     this.update = function(){
         //Reseting the attacks
@@ -293,30 +290,50 @@ function Actor(x, y, width, height){
        }
     }
     
+    this.isRunning = function(){
+        return (
+            this.onGround 
+            && (
+                this.velX > 10 
+                || this.velX < -10
+            )
+        );
+    }
+    
     this.draw = function(){
         var screenX = this.x - cameraLeft;
         var screenY = this.y - cameraTop;
         
-        this.parent.draw.call(this);
-        if(imgLoaded){
-            ctx.save();
-            ctx.translate(
-                screenX,
-                screenY - this.height
-            );
-            if(!this.goForward){
-                ctx.scale(-1,1);
-            }
-            ctx.drawImage(
-                this.img, 
+        //this.parent.draw.call(this);
+        ctx.save();
+        ctx.translate(
+            screenX,
+            screenY - this.height
+        );
+        if(!this.goForward){
+            ctx.scale(-1,1);
+        }
+
+        if(this.isRunning()){
+            this.runningAnimation.drawAnimation(
+                - this.width / 2 ,
+                0, 
+                this.width, 
+                this.height);
+        }
+        else{
+            this.standingAnimation.drawAnimation(
                 - this.width / 2 ,
                 0, 
                 this.width, 
                 this.height
             );
-            ctx.restore();
         }
+
+        ctx.restore();
     }
+    
+  
 }
 
 Actor.inheritsFrom(LivingObject);

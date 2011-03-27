@@ -66,7 +66,7 @@ function initGame(){
     fpsTimer = 0;
     
     initCamera();
-    nemo = new Actor(0,0,46,46);
+    nemo = new Actor(0,0,49,46);
     control = new Control();
     
     //Creating new obstacles
