@@ -8,13 +8,7 @@ var fps;
 var frameCount;
 var fpsTimer;
 
-// Camera values.
-var cameraX;
-var cameraY;
-var cameraTop;
-var cameraLeft;
-var cameraBottom;
-var cameraRight;
+var camera;
 
 // Nemo.
 var nemo;
@@ -37,36 +31,16 @@ function init(){
     }
 }
 
-function initCamera()
-{
-    cameraX = 0;
-    cameraY = 0;
-    updateCamera();
-}
-
-function updateCamera()
-{
-    // Nemo tracking.
-    if ( nemo )
-    {
-        cameraX = cameraX + ( nemo.x - cameraX ) / 16;
-        cameraY = cameraY + ( nemo.y - cameraY ) / 16;
-    }
-    
-    cameraLeft      = cameraX - canvas.width / 2;
-    cameraRight     = cameraX + canvas.width / 2;
-    cameraTop       = cameraY - 2 * canvas.height / 3;
-    cameraBottom    = cameraY + 1 * canvas.height / 3;
-}
-
 function initGame(){
     totalTimer = 0;
     fps = 0;
     frameCount = 0;
     fpsTimer = 0;
     
-    initCamera();
+    //initCamera();
     nemo = new Actor(0,0,49,46);
+    camera = new Camera(nemo);
+    camera.update();
     control = new Control();
     
     //Creating new obstacles
@@ -107,7 +81,7 @@ function gameLoop(){
 
 function updateGame(){
     
-    updateCamera();
+    camera.update();
     nemo.update();
     
     for(var i=0; i<ennemies.length; i++){
@@ -178,12 +152,12 @@ function drawBackground() {
         fy += 90;
         
         // Draw single cloud.
-        ctx.fillRect( fx - ( cameraLeft / 2 ) , ( ( ( fy % 200 ) - 250 ) / 2 ) - cameraTop , 100 , 42 );
+        ctx.fillRect( fx - ( camera.left / 2 ) , ( ( ( fy % 200 ) - 250 ) / 2 ) - camera.top , 100 , 42 );
     }
     
     // Ground.
     ctx.fillStyle = "rgb(0,150,0)";
-    ctx.fillRect( 0 , -cameraTop , canvas.width , canvas.height );
+    ctx.fillRect( 0 , -camera.top , canvas.width , canvas.height );
     
     // Flowers.
     ctx.fillStyle = "rgb(255,0,0)";
@@ -193,7 +167,7 @@ function drawBackground() {
         fy += 65;
         
         // Draw single flower.
-        ctx.fillRect( fx - cameraLeft , ( fy % 100 ) - cameraTop , 10 , 10 );
+        ctx.fillRect( fx - camera.left , ( fy % 100 ) - camera.top , 10 , 10 );
     }
     
 }

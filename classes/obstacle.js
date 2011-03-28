@@ -11,7 +11,7 @@ function Obstacle(x, y, height, width){
     
     this.draw = function(){
         ctx.fillStyle = "rgb(0,230,0)";
-        ctx.fillRect( -cameraLeft + this.x - this.width / 2, -cameraTop + this.y - this.height, this.width, this.height);
+        ctx.fillRect( -camera.left + this.x - this.width / 2, -camera.top + this.y - this.height, this.width, this.height);
     }
 }
 

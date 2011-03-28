@@ -19,7 +19,9 @@ function Actor(x, y, width, height){
     // Maximum speed.
     this.MAX_SPEED = 400;
     
-    this.life = 100;
+    //Life management
+    this.maxLife = 100;
+    this.life = this.maxLife;
     
     // Attacks parameter
     this.stumpAttack = 100;
@@ -35,6 +37,11 @@ function Actor(x, y, width, height){
     
     
     this.update = function(){
+        //If actor is dead we must reset him at the beignning of level
+        if(!this.isAlive()){
+            this.reset();
+        }
+        
         //Reseting the attacks
         this.hmpfAttack = false;
         this.scratchAttack = false;
@@ -301,8 +308,8 @@ function Actor(x, y, width, height){
     }
     
     this.draw = function(){
-        var screenX = this.x - cameraLeft;
-        var screenY = this.y - cameraTop;
+        var screenX = this.x - camera.left;
+        var screenY = this.y - camera.top;
         
         //this.parent.draw.call(this);
         ctx.save();
@@ -331,6 +338,23 @@ function Actor(x, y, width, height){
         }
 
         ctx.restore();
+    }
+    
+    this.reset = function(){
+        //Reseting attacks
+        this.hmpfAttack = false;
+        this.scratchAttack = false;
+        
+        //Putting him back to the beginning
+        this.x = 0;
+        this.y = 0;
+        this.velX = 0;
+        this.velY = 0;
+        this.accelX = 0;
+        this.accelY = 0;
+        
+        //Giving back his life
+        this.life = this.maxLife;
     }
     
   

@@ -18,8 +18,8 @@ function MovingObject(x, y, width, height){
     
     
     this.draw = function(){
-        var screenX = this.x - cameraLeft;
-        var screenY = this.y - cameraTop;
+        var screenX = this.x - camera.left;
+        var screenY = this.y - camera.top;
         
         ctx.fillStyle = this.color;
         ctx.fillRect(   screenX - this.width / 2 ,
