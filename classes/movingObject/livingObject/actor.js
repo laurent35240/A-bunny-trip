@@ -356,10 +356,16 @@ function Actor(x, y, width, height){
         //Giving back his life
         this.life = this.maxLife;
     }
-    
+
+    /**
+     * Adjust position of actor according to different obstacles of the level
+     */
+    this.adjustWithLevel = function(level){
+        for(var i=0; i < level.obstacles.length; i ++){
+            this.adjust(level.obstacles[i]);
+        }
+    }
   
 }
 
 Actor.inheritsFrom(LivingObject);
-
-

@@ -14,7 +14,8 @@ var camera;
 var nemo;
 
 var control;
-var obstacles;
+
+var level;
 
 var ennemies;
 
@@ -43,11 +44,7 @@ function initGame(){
     camera.update();
     control = new Control();
     
-    //Creating new obstacles
-    obstacles = new Array();
-    for(var i=0; i<100; i++){
-        obstacles.push(new Obstacle(i*160 + 300, (i%3) * 20 -70, 10, 100));
-    }
+    level = new Level(level1);
     
     //Creating ennemies
     ennemies = new Array();
@@ -94,9 +91,7 @@ function updateGame(){
 
 function updateCollision(){
     //Check nemo vs obstacles
-    for(var i=0; i < obstacles.length; i ++){
-        nemo.adjust(obstacles[i]);
-    }
+    nemo.adjustWithLevel(level);
     
     for(var j=0; j < ennemies.length; j ++){
         nemo.adjustWithEnnemy(ennemies[j]);
@@ -120,10 +115,7 @@ function drawGame(){
     // Draw background.
     drawBackground();
     
-    //Draw obstacles
-    for(var i=0; i < obstacles.length; i ++){
-        obstacles[i].draw();
-    }
+    level.draw();
     
     // Draw Nemo.
     nemo.draw();
