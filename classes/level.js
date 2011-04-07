@@ -17,7 +17,7 @@ function Level(levelMap){
         for(var j=0; j<levelLayer.length; j++){
             levelBlockValue = levelLayer[j];
             if(levelBlockValue == 1){
-                this.obstacles.push(new Obstacle(j * this.blockWidth, (i - levelMap.length + 2) * this.blockHeight, this.blockWidth, this.blockHeight));
+                this.obstacles.push(new Obstacle(j * this.blockWidth, (i - levelMap.length + 1) * this.blockHeight, this.blockWidth, this.blockHeight));
             }
         }
     }
