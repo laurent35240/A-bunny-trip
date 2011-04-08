@@ -4,8 +4,8 @@
  */
 
 function Level(levelMap){
-    this.blockWidth = 50;
-    this.blockHeight = 50;
+    this.blockWidth = 40;
+    this.blockHeight = 40;
     
     //Creating new obstacles
     this.obstacles = [];
